@@ -1,0 +1,14 @@
+# Archivos generados por Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos de Arduino
+build/
+*.hex
+*.elf
+*.bin
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db

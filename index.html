@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <!--
+    Interfaz de Control Remoto de la Grúa Torre.
+    Página web servida por el ESP32. Utiliza Fetch API para enviar comandos HTTP GET 
+    de manera asíncrona al servidor sin recargar la página.
+    Diseñada para ser responsiva y orientada a pantallas táctiles (móviles).
+    -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Grúa Torre</title>
+    <style>
+        /* Diseño "Control Remoto" optimizado para Móviles */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            text-align: center; 
+            background-color: #1a252f; 
+            color: #ecf0f1;
+            margin: 0; 
+            padding: 10px;
+            /* Prevenir selecciones de texto accidentales en móviles */
+            user-select: none; 
+            -webkit-user-select: none;
+        }
+        h2 { margin-bottom: 5px; }
+        .panel { 
+            background: #2c3e50; 
+            padding: 20px; 
+            border-radius: 15px; 
+            max-width: 350px; 
+            margin: 15px auto; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        h3 { 
+            margin-top: 0; 
+            font-size: 16px; 
+            color: #bdc3c7; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+        }
+        .btn { 
+            padding: 20px 10px; 
+            font-size: 18px; 
+            margin: 5px; 
+            cursor: pointer; 
+            border: none; 
+            border-radius: 10px; 
+            font-weight: bold;
+            color: white;
+            /* Optimización táctil: Deshabilita el zoom al tocar dos veces */
+            touch-action: manipulation; 
+            transition: transform 0.1s, opacity 0.1s;
+        }
+        
+        /* Paleta de colores para los distintos motores */
+        .btn-carro { background-color: #2980b9; width: 45%; }
+        .btn-elev { background-color: #d35400; width: 45%; }
+        .btn-giro { background-color: #8e44ad; width: 45%; }
+        .btn-stop { background-color: #c0392b; width: 95%; margin-top: 10px;}
+        
+        /* Efecto de presionado */
+        .btn:active { transform: scale(0.95); opacity: 0.8; }
+    </style>
+</head>
+<body>
+    <h2>Grúa Torre</h2>
+    <p style="margin-top: 0; color: #95a5a6; font-size: 14px;">Panel de Control Web Remoto</p>
+    
+    <!-- PANEL 1: MOVIMIENTO DEL CARRO -->
+    <div class="panel">
+        <h3>Carro</h3>
+        <!-- Eventos pointer unifican mouse y touch para enviar comandos de forma continua -->
+        <button class="btn btn-carro" onpointerdown="iniciar('/forward')" onpointerup="detener()" onpointerleave="detener()">⬆️ Adelante</button>
+        <button class="btn btn-carro" onpointerdown="iniciar('/backward')" onpointerup="detener()" onpointerleave="detener()">⬇️ Atrás</button>
+    </div>
+
+    <!-- PANEL 2: SISTEMA DE ELEVACIÓN -->
+    <div class="panel">
+        <h3>Elevación</h3>
+        <button class="btn btn-elev" onpointerdown="iniciar('/up')" onpointerup="detener()" onpointerleave="detener()">🏗️ Subir</button>
+        <button class="btn btn-elev" onpointerdown="iniciar('/down')" onpointerup="detener()" onpointerleave="detener()">⚓ Bajar</button>
+    </div>
+
+    <!-- PANEL 3: ROTACIÓN DE LA GRÚA -->
+    <div class="panel">
+        <h3>Giro de Torre</h3>
+        <button class="btn btn-giro" onpointerdown="iniciar('/left')" onpointerup="detener()" onpointerleave="detener()">⬅️ Izquierda</button>
+        <button class="btn btn-giro" onpointerdown="iniciar('/right')" onpointerup="detener()" onpointerleave="detener()">Derecha ➡️</button>
+    </div>
+
+    <!-- BOTÓN DE EMERGENCIA -->
+    <div class="panel" style="padding: 10px 20px;">
+        <button class="btn btn-stop" onclick="enviarComando('/stop')">🛑 PARADA DE EMERGENCIA</button>
+    </div>
+
+    <script>
+        let intervalo = null;
+
+        // Función base que hace la petición al ESP32 sin recargar la página (Fetch API)
+        function enviarComando(ruta) {
+            fetch(ruta).catch(e => console.error("Error de conexión:", e));
+        }
+
+        // Se ejecuta al presionar y MANTENER presionado un botón
+        function iniciar(ruta) {
+            // Limpiamos cualquier intervalo previo por seguridad
+            if (intervalo) clearInterval(intervalo);
+            
+            // Enviamos el primer comando inmediatamente
+            enviarComando(ruta);
+            
+            // Creamos un ciclo: Enviar el comando repetidamente cada 250ms.
+            // Esto cumple con el requerimiento de "Timeout de seguridad" en el Arduino.
+            intervalo = setInterval(() => enviarComando(ruta), 250);
+        }
+
+        // Se ejecuta al SOLTAR el botón o deslizar el dedo fuera del botón
+        function detener() {
+            if (intervalo) {
+                clearInterval(intervalo); // Romper el ciclo de repetición
+                intervalo = null;
+                enviarComando('/stop');   // Enviar comando de parada
+            }
+        }
+    </script>
+</body>
+</html>
