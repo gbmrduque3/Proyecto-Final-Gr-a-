@@ -14,7 +14,7 @@ import uselect
 
 # --- CONFIGURACIÓN DE WI-FI ---
 # Los estudiantes pueden cambiar estas credenciales por las de su propia red o del colegio.
-SSID = "Claro_JC_5G"
+SSID = "Claro_JC"  # Cambia esto por el nombre de tu red Wi-Fi
 PASSWORD = "1713283321!"
 
 def connect_wifi(ssid=SSID, password=PASSWORD):
@@ -28,13 +28,58 @@ def connect_wifi(ssid=SSID, password=PASSWORD):
     # Si no estamos conectados, iniciamos el proceso de conexión
     if not wlan.isconnected():
         print('Conectando a la red:', ssid)
-        wlan.connect(ssid, password)
-       
-        # Esperamos en un ciclo hasta que el router nos asigne una dirección IP
-        while not wlan.isconnected():
-            time.sleep(0.5)
-            print('.', end='')
-           
+
+        # Intentos de conexión con manejo de errores para diagnóstico
+        max_attempts = 5
+        connected = False
+        for attempt in range(1, max_attempts + 1):
+            try:
+                wlan.connect(ssid, password)
+            except OSError as e:
+                print('OSError en wlan.connect():', e)
+                # Intentaremos recopilar información del adaptador
+                try:
+                    print('Estado WLAN (wlan.status):', wlan.status())
+                except Exception:
+                    pass
+            # Esperar un poco y comprobar si se conectó
+            wait_start = time.time()
+            while (time.time() - wait_start) < 5:
+                if wlan.isconnected():
+                    connected = True
+                    break
+                time.sleep(0.5)
+                print('.', end='')
+
+            if connected:
+                break
+            else:
+                print('\nIntento', attempt, 'fallido. Reintentando...')
+
+        if not connected:
+            print('\nNo se pudo conectar en modo STA tras', max_attempts, 'intentos.')
+            # Mostrar redes detectadas para ayudar al diagnóstico
+            try:
+                nets = wlan.scan()
+                print('Redes detectadas (SSID, RSSI, Authmode):')
+                for n in nets:
+                    ss = n[0].decode('utf-8', 'ignore') if isinstance(n[0], (bytes, bytearray)) else str(n[0])
+                    rssi = n[3]
+                    auth = n[4]
+                    print('-', ss, rssi, auth)
+            except Exception as e:
+                print('No se pudo realizar scan():', e)
+
+            # Como fallback y para facilitar configuración, habilitamos un AP local
+            try:
+                ap = network.WLAN(network.AP_IF)
+                ap.active(True)
+                ap.config(essid='ESP32-Grua-Setup')
+                print('Modo AP activo. Conéctate a la red "ESP32-Grua-Setup" y abre http://192.168.4.1')
+            except Exception as e:
+                print('Error al iniciar modo AP:', e)
+            return
+
     # Cuando nos conectamos, imprimimos la IP para poder ingresar desde el navegador web
     print('\n¡Conexión exitosa al Wi-Fi!')
     print('Ingresa esta Dirección IP en tu navegador para ver los controles:', wlan.ifconfig()[0])
