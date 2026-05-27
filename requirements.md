@@ -17,7 +17,7 @@ Este documento detalla los requerimientos técnicos y la asignación de hardware
     - Eje X del segundo Joystick (Carro) -> Pin Analógico A2
     - Pulsador (Alternancia de modo) -> Pin Analógico A3 (Configurado como `INPUT_PULLUP` digital)
   - **Puente H 1 (TB6612FNG - Motores de Carro y Giro):**
-    - Motor Carro: AIN1(D2), AIN2(D4), PWMA(D3)
+    - Motor Carro (300 RPM): AIN1(D2), AIN2(D4), PWMA(D3)
     - Motor Giro (30 RPM): BIN1(D7), BIN2(D8), PWMB(D5)
   - **Puente H 2 (TB6612FNG - Motor de Elevación):**
     - Motor Elevación (300 RPM): AIN1(D10), AIN2(D11), PWMA(D6)
