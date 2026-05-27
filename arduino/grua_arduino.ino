@@ -9,14 +9,18 @@
  *
  * Controles:
  * 1. Físico: Joysticks analógicos en A0 (Giro), A1 (Elevación) y A2 (Carro).
- * 2. Remoto: Peticiones web a través del ESP32 por Serial (UART).
+ * 2. Remoto: Peticiones web a través del navegador por Serial (UART) USB.
  * 3. Selector de Modo: Pulsador en pin A3 (toggles controlWebActivo).
  *
  * Lógica de Prioridad y Sincronización:
  * - El modo de control es exclusivo (Web o Joystick).
  * - Se alterna mediante pulsador (Pin A3) o el comando serial 'M'.
+ *
+ * Depuración Auxiliar Inalámbrica:
+ * - Envía logs de eventos en tiempo real al ESP32 a través de SoftwareSerial (D12=RX, D9=TX) a 9600 bps.
  */
-// grua_arduino.ino
+
+#include <SoftwareSerial.h>
 
 // ==== PINES DEL JOYSTICK (Entradas Analógicas y Digital) ====
 const int JOY_GIRO = A0;        // Joystick para Rotación (Izquierda/Derecha)
@@ -39,6 +43,9 @@ const int PWMB_1 = 5;
 const int AIN1_2 = 10;
 const int AIN2_2 = 11;
 const int PWMA_2 = 6;
+
+// ==== PUERTO DE DEPURACIÓN SECUNDARIO (SoftwareSerial) ====
+SoftwareSerial debugSerial(12, 9); // RX = Pin 12, TX = Pin 9
 
 // ==== CONFIGURACIÓN DE VELOCIDADES MÁXIMAS (0 a 255) ====
 const int VEL_MAX_CARRO = 255;  // Velocidad máxima del carro
@@ -82,8 +89,11 @@ unsigned long ultimoReporteTelemetria = 0;
 const unsigned long INTERVALO_TELEMETRIA = 200; // Enviar telemetría cada 200 ms
 
 void setup() {
-  // Serial a 9600 bps para comunicar con el ESP32
+  // Serial de Hardware a 9600 bps para comunicar con la Web Serial API de la laptop
   Serial.begin(9600);
+  
+  // Serial de Software a 9600 bps para depuración inalámbrica con el ESP32
+  debugSerial.begin(9600);
 
   // Configuración de pines de salida Puente H 1 (Carro y Giro)
   pinMode(AIN1_1, OUTPUT);
@@ -107,6 +117,11 @@ void setup() {
   detenerElevacion();
 
   ultimaActualizacionFisica = millis();
+  
+  // Mensajes iniciales de depuración
+  debugSerial.println("--- DIAGNÓSTICO GRÚA INICIALIZADO ---");
+  debugSerial.println("Arduino Nano: Listo para recibir comandos USB Serial.");
+  debugSerial.println("Puerto SoftwareSerial: D12(RX)/D9(TX) activo a 9600 baudios.");
 }
 
 // ==== FUNCIONES DE MOVIMIENTO - CARRO ====
@@ -155,23 +170,32 @@ void detenerElevacion() {
 }
 
 void loop() {
-  // 1. LECTURA DE COMANDOS UART (DESDE ESP32)
+  // 1. LECTURA DE COMANDOS UART (DESDE LA WEB SERIAL API POR USB)
   if (Serial.available() > 0) {
     char c = Serial.read();
     if (c == 'F' || c == 'B' || c == 'U' || c == 'D' || c == 'L' || c == 'R' || c == 'S') {
       comandoWeb = c;
       ultimoComandoWeb = millis(); // Reiniciar timeout
+      
+      // Enviar log de depuración al ESP32
+      debugSerial.print("[COMANDO USB] Moviendo: ");
+      debugSerial.println(c);
     } 
     else if (c == 'M') {
-      // Comando 'M': alterna entre modo Web y modo Joystick en el firmware
-      // Este cambio de modo también se refleja en la telemetría enviada al ESP32.
       controlWebActivo = !controlWebActivo;
+      
+      // Enviar log de depuración al ESP32
+      debugSerial.print("[CONMUTACIÓN MODO] Origen: Serial USB. Modo activo: ");
+      debugSerial.println(controlWebActivo ? "WEB" : "JOYSTICK");
     }
   }
 
   // 2. TIMEOUT DE COMANDOS WEB
-  if (millis() - ultimoComandoWeb > TIMEOUT_WEB) {
-    comandoWeb = 'S'; // Detener si se pierde el latido
+  if (controlWebActivo && (millis() - ultimoComandoWeb > TIMEOUT_WEB)) {
+    if (comandoWeb != 'S') {
+      comandoWeb = 'S'; // Detener si se pierde el latido
+      debugSerial.println("[SEGURIDAD] Timeout de comunicación USB. Motores detenidos.");
+    }
   }
 
   // 3. DEBOUNCE DEL PULSADOR FÍSICO (PIN A3)
@@ -185,6 +209,10 @@ void loop() {
       estadoBoton = lectura;
       if (estadoBoton == LOW) { // Pulsado (flanco de bajada en PULLUP)
         controlWebActivo = !controlWebActivo; // Alternar modo
+        
+        // Enviar log de depuración al ESP32
+        debugSerial.print("[CONMUTACIÓN MODO] Origen: Pulsador Físico A3. Modo activo: ");
+        debugSerial.println(controlWebActivo ? "WEB" : "JOYSTICK");
       }
     }
   }
@@ -334,13 +362,7 @@ void loop() {
   // Determinar modo de control para telemetría
   String modoTelemetria = controlWebActivo ? "WEB" : "JOYSTICK";
 
-  // 6. ENVIAR REPORTE SERIAL CADA 200MS
-  // El firmware ahora envía un JSON de telemetría ampliado que incluye:
-  // - mode: modo activo (WEB o JOYSTICK)
-  // - cx, cy, cz: valores crudos de los joysticks de Carro, Elevación y Giro
-  // - sw: estado del pulsador físico (0 = pulsado, 1 = liberado)
-  // - pCarro, pElev, pGiro: posiciones estimadas para animar la interfaz web
-  // - mCarro, mElev, mGiro: estados de movimiento simplificados para la UI
+  // 6. ENVIAR REPORTE SERIAL CADA 200MS HACIA LA LAPTOP POR USB
   if (ahora - ultimoReporteTelemetria >= INTERVALO_TELEMETRIA) {
     ultimoReporteTelemetria = ahora;
 

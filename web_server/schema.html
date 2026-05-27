@@ -1067,16 +1067,22 @@
                     <tbody>
                         <!-- Categoría: UART -->
                         <tr data-category="uart" data-connection-id="uart-rx">
-                            <td><span class="badge badge-uart">UART</span></td>
+                            <td><span class="badge badge-uart">UART (Soft)</span></td>
                             <td><span class="pin-tag">ESP32 GPIO 17 (TX2)</span></td>
-                            <td><span class="pin-tag">Arduino Nano D0 (RX)</span></td>
-                            <td>Recepción en Nano de comandos web del ESP32.</td>
+                            <td><span class="pin-tag">Arduino Nano D12 (RX)</span></td>
+                            <td>Recepción de comandos de diagnóstico opcionales en el Arduino.</td>
                         </tr>
                         <tr data-category="uart" data-connection-id="uart-tx">
-                            <td><span class="badge badge-uart">UART</span></td>
-                            <td><span class="pin-tag">Arduino Nano D1 (TX)</span></td>
+                            <td><span class="badge badge-uart">UART (Soft)</span></td>
+                            <td><span class="pin-tag">Arduino Nano D9 (TX)</span></td>
                             <td><span class="pin-tag">ESP32 GPIO 16 (RX2)</span></td>
-                            <td>Envío de telemetría serial JSON hacia la interfaz web.</td>
+                            <td>Transmisión de trazas y logs de depuración del Arduino al monitor del ESP32.</td>
+                        </tr>
+                        <tr data-category="uart" data-connection-id="uart-usb">
+                            <td><span class="badge badge-uart">UART (USB)</span></td>
+                            <td><span class="pin-tag">Laptop (Navegador)</span></td>
+                            <td><span class="pin-tag">Arduino Nano USB (D0/D1)</span></td>
+                            <td>Control en tiempo real y recepción de telemetría JSON vía Web Serial API.</td>
                         </tr>
 
                         <!-- Categoría: Alimentación -->
@@ -1714,13 +1720,23 @@
                 },
                 "pin-ard-d0": {
                     name: "Arduino Nano D0 (RX)",
-                    desc: "Pin de recepción serial UART. Conectado al pin TXD2 del ESP32 Gateway para recibir los comandos de movimiento y control enviados desde la interfaz web.",
-                    wires: ["uart-rx"]
+                    desc: "Pin de recepción serial UART por Hardware. Conectado al bus USB para recibir comandos desde la Web Serial API de la laptop a 9600 bps.",
+                    wires: ["uart-usb"]
                 },
                 "pin-ard-d1": {
                     name: "Arduino Nano D1 (TX)",
-                    desc: "Pin de transmisión serial UART. Conectado al pin RXD2 del ESP32 Gateway para enviar los datos de telemetría en tiempo real hacia la web.",
+                    desc: "Pin de transmisión serial UART por Hardware. Conectado al bus USB para enviar las tramas de telemetría JSON hacia la Web Serial API en la laptop a 9600 bps.",
+                    wires: ["uart-usb"]
+                },
+                "pin-ard-d9": {
+                    name: "Arduino Nano D9 (TX - Soft)",
+                    desc: "Pin digital configurado mediante SoftwareSerial para transmitir las trazas de depuración y logs del Arduino al pin RX2 del ESP32.",
                     wires: ["uart-tx"]
+                },
+                "pin-ard-d12": {
+                    name: "Arduino Nano D12 (RX - Soft)",
+                    desc: "Pin digital configurado mediante SoftwareSerial para la recepción opcional de comandos de diagnóstico desde el pin TX2 del ESP32.",
+                    wires: ["uart-rx"]
                 },
                 "pin-ard-d2": {
                     name: "Arduino Nano D2 (AIN1)",
@@ -1779,12 +1795,12 @@
                 },
                 "pin-esp-tx": {
                     name: "ESP32 GPIO 17 (TXD2)",
-                    desc: "Pin de transmisión serial del ESP32 hacia el Arduino Nano D0 (RX) para enviar comandos recibidos de los usuarios de la web.",
+                    desc: "Pin de transmisión serial del ESP32 hacia el Arduino Nano D12 (Software RX) para enviar comandos opcionales de diagnóstico.",
                     wires: ["uart-rx"]
                 },
                 "pin-esp-rx": {
                     name: "ESP32 GPIO 16 (RXD2)",
-                    desc: "Pin de recepción serial del ESP32 desde el Arduino Nano D1 (TX) para capturar los datos de telemetría y servirlos al frontend.",
+                    desc: "Pin de recepción serial del ESP32 desde el Arduino Nano D9 (Software TX) para capturar las trazas de depuración y logs para servirlos en la web de monitoreo.",
                     wires: ["uart-tx"]
                 },
                 "pin-esp-5v": {

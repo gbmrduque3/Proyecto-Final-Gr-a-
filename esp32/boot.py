@@ -1,22 +1,20 @@
-﻿"""
+"""
 Módulo de arranque (boot.py) para ESP32.
 Este archivo se ejecuta automáticamente al encender o reiniciar el microcontrolador.
-Su propósito principal es establecer la conexión a la red Wi-Fi local para
-permitir el acceso al servidor web que controla la grúa.
-Incluye un menú interactivo en terminal para detener el arranque y permitir
-la programación/modificación de archivos (REPL libre).
+Su propósito principal es establecer la conexión a la red Wi-Fi local o activar el modo AP como fallback.
 """
-# boot.py
 import network
 import time
 import sys
 import uselect
 
 # --- CONFIGURACIÓN DE WI-FI ---
-# Los estudiantes pueden cambiar estas credenciales por las de su propia red o del colegio.
-SSID = "TU_RED_WIFI"  # Cambia esto por el nombre de tu red Wi-Fi
-PASSWORD = "TU_CLAVE_WIFI"  # Cambia esto por la contraseña de tu red Wi-Fi
+SSID = "TU_RED_WIFI"
+PASSWORD = "TU_CLAVE_WIFI"
 
+# --- CONFIGURACIÓN ACCESS POINT FALLBACK ---
+AP_SSID = "ESP32-Grua-Setup"
+AP_PASSWORD = "" # Sin contraseña (red abierta)
 
 def menu_inicio(timeout_segundos=5):
     """
@@ -24,7 +22,7 @@ def menu_inicio(timeout_segundos=5):
     Permite detener el inicio automático para liberar la consola REPL.
     """
     print("\n" + "="*40)
-    print("      SISTEMA DE CONTROL - GRÚA TORRE")
+    print("      SISTEMA DE DEPURACIÓN INALÁMBRICA - GRÚA TORRE")
     print("="*40)
     print("1. Iniciar sistema normalmente (Modo Ejecución)")
     print("2. Detener en modo programación (Liberar REPL)")
@@ -48,17 +46,15 @@ def menu_inicio(timeout_segundos=5):
     print("\n-> Tiempo de espera agotado. Iniciando de forma automática...")
     return True
 
-
 def connect_wifi(ssid=SSID, password=PASSWORD):
     """
-    Función para conectar el ESP32 a la red Wi-Fi.
+    Conecta el ESP32 a la red Wi-Fi local. Si falla, levanta un Access Point.
     """
     wlan = network.WLAN(network.STA_IF)
     wlan.active(True)
 
     if not wlan.isconnected():
         print('Conectando a la red:', ssid)
-
         max_attempts = 5
         connected = False
 
@@ -66,11 +62,7 @@ def connect_wifi(ssid=SSID, password=PASSWORD):
             try:
                 wlan.connect(ssid, password)
             except OSError as e:
-                print('OSError en wlan.connect():', e)
-                try:
-                    print('Estado WLAN (wlan.status):', wlan.status())
-                except Exception:
-                    pass
+                print('OSError:', e)
 
             wait_start = time.time()
             while (time.time() - wait_start) < 5:
@@ -83,28 +75,29 @@ def connect_wifi(ssid=SSID, password=PASSWORD):
             if connected:
                 break
             else:
-                print('\nIntento', attempt, 'fallido. Reintentando...')
+                print(f'\nIntento {attempt} fallido. Reintentando...')
 
         if not connected:
-            print('\nNo se pudo conectar en modo STA tras', max_attempts, 'intentos.')
-            try:
-                nets = wlan.scan()
-                print('Redes detectadas (SSID, RSSI, Authmode):')
-                for n in nets:
-                    ss = n[0].decode('utf-8', 'ignore') if isinstance(n[0], (bytes, bytearray)) else str(n[0])
-                    rssi = n[3]
-                    auth = n[4]
-                    print('-', ss, rssi, auth)
-            except Exception as e:
-                print('No se pudo realizar scan():', e)
-
-            print('No se habilitará modo AP. Verifica las credenciales o el alcance de la red Wi-Fi.')
+            print('\nNo se pudo conectar al Wi-Fi. Iniciando Access Point de respaldo...')
+            start_ap()
             return
 
     print('\n¡Conexión exitosa al Wi-Fi!')
-    print('Ingresa esta Dirección IP en tu navegador para ver los controles:', wlan.ifconfig()[0])
+    print('Ingresa esta Dirección IP en tu navegador para ver la depuración:', wlan.ifconfig()[0])
 
+def start_ap():
+    """
+    Inicializa el ESP32 en modo Access Point.
+    """
+    ap = network.WLAN(network.AP_IF)
+    ap.active(True)
+    ap.config(essid=AP_SSID, password=AP_PASSWORD, authmode=network.AUTH_OPEN)
+    
+    print('Access Point creado con éxito.')
+    print('SSID:', AP_SSID)
+    print('Dirección IP (Gateway):', ap.ifconfig()[0])
 
+# Menú de inicio de 5 segundos
 if menu_inicio(timeout_segundos=5):
     connect_wifi(SSID, PASSWORD)
 else:

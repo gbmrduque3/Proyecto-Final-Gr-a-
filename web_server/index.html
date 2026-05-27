@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <!--
@@ -627,10 +627,18 @@
         <header>
         <h1>🏗️ TorreGrúa Control</h1>
         <div style="display: flex; align-items: center; gap: 15px;">
+            <!-- Botón de Conectar USB -->
+            <button id="serialConnectBtn" class="theme-toggle-btn" style="width: auto; padding: 0 15px; border-radius: 20px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px;" title="Conectar a Grúa vía USB">
+                🔌 Conectar USB
+            </button>
             <!-- Botón de Tema -->
             <button id="themeToggle" class="theme-toggle-btn" title="Alternar Tema Claro/Oscuro">
                 <span class="theme-icon" id="themeIcon">☀️</span>
             </button>
+            <!-- Botón de Ir a Esquema -->
+            <a href="schema.html" class="theme-toggle-btn" style="width: auto; padding: 0 15px; border-radius: 20px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; text-decoration: none; color: inherit;" title="Ver Esquema Electrónico">
+                📋 Ver Esquema
+            </a>
             <!-- Interruptor de modo (Toggle Switch): alterna el control entre Web y Joystick -->
             <div style="display: flex; align-items: center; gap: 8px;">
                 <span id="switchLabel" style="font-size: 13px; font-weight: 600; color: var(--text-secondary); transition: all 0.3s;">Control Web</span>
@@ -850,40 +858,268 @@
     <script>
         let intervalo = null;
         let consecFails = 0;
+        let pollingInterval = null;
 
-        // Función base que hace la petición al ESP32 sin recargar la página (Fetch API)
-        function enviarComando(ruta) {
-            fetch(ruta).catch(e => console.error("Error de conexión:", e));
+        // --- PUERTO Y VARIABLES WEB SERIAL ---
+        let port = null;
+        let reader = null;
+        let writer = null;
+        let keepReading = true;
+
+        // Mapeo de rutas de comandos a caracteres serie del Arduino Nano
+        const cmdMap = {
+            '/forward': 'F',
+            '/backward': 'B',
+            '/up': 'U',
+            '/down': 'D',
+            '/left': 'L',
+            '/right': 'R',
+            '/stop': 'S',
+            '/toggle-mode': 'M'
+        };
+
+        // Función base que envía comandos al Arduino
+        async function enviarComando(ruta) {
+            const cmd = cmdMap[ruta];
+            if (!cmd) return;
+
+            if (port && port.writable) {
+                try {
+                    const encoder = new TextEncoder();
+                    const writerStream = port.writable.getWriter();
+                    await writerStream.write(encoder.encode(cmd));
+                    writerStream.releaseLock();
+                } catch (err) {
+                    console.error("Error enviando por USB Serial:", err);
+                }
+            } else {
+                // Fallback original vía red/HTTP si no hay conexión USB
+                fetch(ruta).catch(e => console.error("Error de conexión red:", e));
+            }
         }
 
         // Se ejecuta al presionar y MANTENER presionado un botón
         function iniciar(ruta) {
-            // Limpiamos cualquier intervalo previo por seguridad
             if (intervalo) clearInterval(intervalo);
-            
-            // Enviamos el primer comando inmediatamente
             enviarComando(ruta);
-            
-            // Creamos un ciclo: Enviar el comando repetidamente cada 250ms.
-            // Esto cumple con el requerimiento de "Timeout de seguridad" en el Arduino.
             intervalo = setInterval(() => enviarComando(ruta), 250);
         }
 
-        // Se ejecuta al SOLTAR el botón o deslizar el dedo fuera del botón
+        // Se ejecuta al SOLTAR el botón
         function detener() {
             if (intervalo) {
-                clearInterval(intervalo); // Romper el ciclo de repetición
+                clearInterval(intervalo);
                 intervalo = null;
-                enviarComando('/stop');   // Enviar comando de parada
+                enviarComando('/stop');
             }
         }
 
-        // --- SISTEMA DE TELEMETRÍA ---
-        // Esta función consulta el endpoint /telemetry y actualiza la UI en tiempo real.
+        // --- CONTROLADOR DE EVENTOS DE CONEXIÓN USB ---
+        const serialConnectBtn = document.getElementById('serialConnectBtn');
+        serialConnectBtn.addEventListener('click', async () => {
+            if (port) {
+                await disconnectSerial();
+            } else {
+                await connectSerial();
+            }
+        });
+
+        async function connectSerial() {
+            try {
+                port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 9600 });
+                
+                // Detener polling de red HTTP
+                if (pollingInterval) {
+                    clearInterval(pollingInterval);
+                    pollingInterval = null;
+                }
+
+                document.getElementById('statusDot').className = 'status-dot connected';
+                document.getElementById('statusText').innerText = 'USB Conectado';
+                document.getElementById('pingText').innerText = '(Directo)';
+                serialConnectBtn.innerHTML = '🔌 Desconectar USB';
+                serialConnectBtn.style.borderColor = 'var(--carro-color)';
+
+                keepReading = true;
+                readLoop();
+
+                // Habilitar botones de movimiento
+                let controlButtons = document.querySelectorAll('.btn:not(.btn-stop)');
+                controlButtons.forEach(btn => btn.disabled = false);
+            } catch (err) {
+                console.error("Error al abrir puerto serial:", err);
+                disconnectSerial();
+            }
+        }
+
+        async function disconnectSerial() {
+            keepReading = false;
+            if (reader) {
+                try {
+                    await reader.cancel();
+                } catch (e) {}
+            }
+            if (port) {
+                try {
+                    await port.close();
+                } catch (e) {}
+            }
+            port = null;
+            reader = null;
+
+            document.getElementById('statusDot').className = 'status-dot';
+            document.getElementById('statusText').innerText = 'Desconectado';
+            document.getElementById('pingText').innerText = '';
+            serialConnectBtn.innerHTML = '🔌 Conectar USB';
+            serialConnectBtn.style.borderColor = 'var(--border-color)';
+
+            let modeBadge = document.getElementById('modeBadge');
+            modeBadge.className = 'mode-badge inactivo';
+            modeBadge.innerText = 'SIN CONEXIÓN';
+
+            // Deshabilitar botones de control
+            let controlButtons = document.querySelectorAll('.btn:not(.btn-stop)');
+            controlButtons.forEach(btn => btn.disabled = true);
+            let modeSwitch = document.getElementById('modeSwitch');
+            if (modeSwitch) modeSwitch.checked = false;
+            let switchLabel = document.getElementById('switchLabel');
+            if (switchLabel) {
+                switchLabel.innerText = 'Control Web';
+                switchLabel.style.color = 'var(--text-secondary)';
+            }
+
+            // Volver a iniciar el polling de red como fallback
+            if (!pollingInterval) {
+                pollingInterval = setInterval(updateTelemetry, 300);
+            }
+        }
+
+        // Bucle asíncrono para leer telemetría desde el USB
+        async function readLoop() {
+            while (port && port.readable && keepReading) {
+                try {
+                    const textDecoder = new TextDecoderStream();
+                    const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+                    const readerStream = textDecoder.readable.getReader();
+                    reader = readerStream;
+
+                    let buffer = "";
+                    while (true) {
+                        const { value, done } = await readerStream.read();
+                        if (done) {
+                            break;
+                        }
+                        buffer += value;
+                        if (buffer.includes('\n')) {
+                            let lines = buffer.split('\n');
+                            buffer = lines.pop(); // Guardar residuo
+                            for (let line of lines) {
+                                line = line.trim();
+                                if (line.startsWith('{') && line.endsWith('}')) {
+                                    try {
+                                        const data = JSON.parse(line);
+                                        processTelemetryData(data);
+                                    } catch (e) {}
+                                }
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.error("Lectura serial fallida, reintentando...", err);
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            }
+        }
+
+        // --- PROCESAMIENTO Y ACTUALIZACIÓN DE UI DE TELEMETRÍA ---
+        function processTelemetryData(data) {
+            consecFails = 0;
+            
+            // Actualizar Badge de Modo Activo y Switch Toggle
+            let modeBadge = document.getElementById('modeBadge');
+            let modeSwitch = document.getElementById('modeSwitch');
+            let switchLabel = document.getElementById('switchLabel');
+            modeBadge.className = 'mode-badge';
+            
+            let isWebMode = (data.mode === 'WEB');
+            
+            if (isWebMode) {
+                modeBadge.innerText = 'Modo Web';
+                modeBadge.classList.add('web');
+                if (modeSwitch) modeSwitch.checked = true;
+                if (switchLabel) {
+                    switchLabel.innerText = 'Control Web: Activo';
+                    switchLabel.style.color = 'var(--carro-color)';
+                }
+            } else if (data.mode === 'JOYSTICK') {
+                modeBadge.innerText = 'Modo Joystick';
+                modeBadge.classList.add('joystick');
+                if (modeSwitch) modeSwitch.checked = false;
+                if (switchLabel) {
+                    switchLabel.innerText = 'Mando Joystick';
+                    switchLabel.style.color = 'var(--success-color)';
+                }
+            } else {
+                modeBadge.innerText = 'Reposo';
+                modeBadge.classList.add('inactivo');
+                if (modeSwitch) modeSwitch.checked = false;
+                if (switchLabel) {
+                    switchLabel.innerText = 'Control Web';
+                    switchLabel.style.color = 'var(--text-secondary)';
+                }
+            }
+
+            // Habilitar/Deshabilitar botones
+            let controlButtons = document.querySelectorAll('.btn:not(.btn-stop)');
+            controlButtons.forEach(btn => {
+                btn.disabled = !isWebMode;
+            });
+
+            // Actualizar textos digitales de motores
+            document.getElementById('valCarroCm').innerHTML = `${data.pCarro.toFixed(1)} <span style="font-size: 11px; color: var(--text-secondary); font-weight: normal;">cm</span>`;
+            document.getElementById('valElevCm').innerHTML = `${data.pElev.toFixed(1)} <span style="font-size: 11px; color: var(--text-secondary); font-weight: normal;">cm</span>`;
+            document.getElementById('valGiroDeg').innerHTML = `${data.pGiro.toFixed(1)}<span style="font-size: 11px; color: var(--text-secondary); font-weight: normal;">°</span>`;
+
+            document.getElementById('stateCarro').innerText = data.mCarro;
+            document.getElementById('stateElev').innerText = data.mElev;
+            document.getElementById('stateGiro').innerText = data.mGiro;
+
+            // Actualizar barras de progreso (carro=30cm, elev=50cm)
+            let pctCarro = Math.min(100, Math.max(0, (data.pCarro / 30.0) * 100));
+            let pctElev = Math.min(100, Math.max(0, (data.pElev / 50.0) * 100));
+            document.getElementById('barCarro').style.width = `${pctCarro}%`;
+            document.getElementById('barElev').style.width = `${pctElev}%`;
+
+            // --- ACTUALIZAR REPRESENTACIÓN DINÁMICA SVG LATERAL ---
+            let carriageX = 65 + (pctCarro / 100) * 145;
+            document.getElementById('svgCarro').setAttribute('x', carriageX - 10);
+            
+            let cableLen = 10 + (pctElev / 100) * 90;
+            let newY2 = 32 + cableLen;
+            
+            let svgCable = document.getElementById('svgCable');
+            svgCable.setAttribute('x1', carriageX);
+            svgCable.setAttribute('x2', carriageX);
+            svgCable.setAttribute('y2', newY2);
+            
+            document.getElementById('svgGancho').setAttribute('transform', `translate(${carriageX}, ${newY2})`);
+
+            // --- ACTUALIZAR VISTA DE GIRO SUPERIOR SVG ---
+            document.getElementById('svgSlewGroup').setAttribute('transform', `rotate(${data.pGiro}, 60, 60)`);
+            let radius = 10 + (pctCarro / 100) * 35;
+            document.getElementById('svgCarroSuperior').setAttribute('cy', 60 - radius);
+
+            // --- DEPURADOR DE ENTRADA ANALÓGICA DE JOYSTICKS ---
+            updateJoystickBar('joyCarroFill', 'joyCarroVal', data.cx);
+            updateJoystickBar('joyElevFill', 'joyElevVal', data.cy);
+            updateJoystickBar('joyGiroFill', 'joyGiroVal', data.cz);
+        }
+
+        // --- SISTEMA DE TELEMETRÍA FALLBACK POR RED ---
         async function updateTelemetry() {
             let tStart = performance.now();
             try {
-                // Hacer polling del endpoint de telemetría asíncrono
                 let response = await fetch('/telemetry');
                 if (!response.ok) throw new Error("HTTP error " + response.status);
                 
@@ -891,109 +1127,22 @@
                 let tEnd = performance.now();
                 let ping = Math.round(tEnd - tStart);
                 
-                consecFails = 0; // Reiniciar contador de errores
+                consecFails = 0;
                 
-                // Actualizar estado de la conexión (Heartbeat)
                 let statusDot = document.getElementById('statusDot');
                 let statusText = document.getElementById('statusText');
                 let pingText = document.getElementById('pingText');
                 
                 statusDot.className = 'status-dot connected';
-                statusText.innerText = 'Conectado';
+                statusText.innerText = 'Red Conectada';
                 pingText.innerText = `(${ping} ms)`;
 
-                // Actualizar Badge de Modo Activo y Switch Toggle
-                let modeBadge = document.getElementById('modeBadge');
-                let modeSwitch = document.getElementById('modeSwitch');
-                let switchLabel = document.getElementById('switchLabel');
-                modeBadge.className = 'mode-badge';
-                
-                let isWebMode = (data.mode === 'WEB');
-                
-                if (isWebMode) {
-                    modeBadge.innerText = 'Modo Web';
-                    modeBadge.classList.add('web');
-                    if (modeSwitch) modeSwitch.checked = true;
-                    if (switchLabel) {
-                        switchLabel.innerText = 'Control Web: Activo';
-                        switchLabel.style.color = 'var(--carro-color)';
-                    }
-                } else if (data.mode === 'JOYSTICK') {
-                    modeBadge.innerText = 'Modo Joystick';
-                    modeBadge.classList.add('joystick');
-                    if (modeSwitch) modeSwitch.checked = false;
-                    if (switchLabel) {
-                        switchLabel.innerText = 'Mando Joystick';
-                        switchLabel.style.color = 'var(--success-color)';
-                    }
-                } else {
-                    modeBadge.innerText = 'Reposo';
-                    modeBadge.classList.add('inactivo');
-                    if (modeSwitch) modeSwitch.checked = false;
-                    if (switchLabel) {
-                        switchLabel.innerText = 'Control Web';
-                        switchLabel.style.color = 'var(--text-secondary)';
-                    }
-                }
-
-                // Habilitar/Deshabilitar botones de control manual según corresponda (excluyendo Parada de Emergencia)
-                // Esta lógica evita que el usuario intente enviar comandos Web cuando el Arduino ya está en modo Joystick.
-                let controlButtons = document.querySelectorAll('.btn:not(.btn-stop)');
-                controlButtons.forEach(btn => {
-                    btn.disabled = !isWebMode;
-                });
-
-                // Actualizar textos digitales e indicadores de estado de motores
-                document.getElementById('valCarroCm').innerHTML = `${data.pCarro.toFixed(1)} <span style="font-size: 11px; color: var(--text-secondary); font-weight: normal;">cm</span>`;
-                document.getElementById('valElevCm').innerHTML = `${data.pElev.toFixed(1)} <span style="font-size: 11px; color: var(--text-secondary); font-weight: normal;">cm</span>`;
-                document.getElementById('valGiroDeg').innerHTML = `${data.pGiro.toFixed(1)}<span style="font-size: 11px; color: var(--text-secondary); font-weight: normal;">°</span>`;
-
-                document.getElementById('stateCarro').innerText = data.mCarro;
-                document.getElementById('stateElev').innerText = data.mElev;
-                document.getElementById('stateGiro').innerText = data.mGiro;
-
-                // Actualizar barras de progreso (Límites por defecto: carro=30cm, elev=50cm)
-                let pctCarro = Math.min(100, Math.max(0, (data.pCarro / 30.0) * 100));
-                let pctElev = Math.min(100, Math.max(0, (data.pElev / 50.0) * 100));
-                document.getElementById('barCarro').style.width = `${pctCarro}%`;
-                document.getElementById('barElev').style.width = `${pctElev}%`;
-
-                // --- ACTUALIZAR REPRESENTACIÓN DINÁMICA SVG LATERAL ---
-                // Mapear pctCarro a coordenadas X de pluma: 65px (0%) a 210px (100%)
-                let carriageX = 65 + (pctCarro / 100) * 145;
-                document.getElementById('svgCarro').setAttribute('x', carriageX - 10);
-                
-                // Mapear pctElev a la longitud del cable vertical: 10px (0%) a 100px (100%)
-                let cableLen = 10 + (pctElev / 100) * 90;
-                let newY2 = 32 + cableLen;
-                
-                let svgCable = document.getElementById('svgCable');
-                svgCable.setAttribute('x1', carriageX);
-                svgCable.setAttribute('x2', carriageX);
-                svgCable.setAttribute('y2', newY2);
-                
-                // Desplazar el gancho verticalmente al final del cable
-                document.getElementById('svgGancho').setAttribute('transform', `translate(${carriageX}, ${newY2})`);
-
-                // --- ACTUALIZAR VISTA DE GIRO SUPERIOR SVG ---
-                // Rotar el grupo del brazo de la pluma
-                document.getElementById('svgSlewGroup').setAttribute('transform', `rotate(${data.pGiro}, 60, 60)`);
-                
-                // Mapear el carro en la vista superior (radio exterior del brazo rotatorio): 10px a 45px
-                let radius = 10 + (pctCarro / 100) * 35;
-                document.getElementById('svgCarroSuperior').setAttribute('cy', 60 - radius);
-
-                // --- DEPURADOR DE ENTRADA ANALÓGICA DE JOYSTICKS ---
-                // El joystick lee valores de 0 a 1023 (centro ~512)
-                updateJoystickBar('joyCarroFill', 'joyCarroVal', data.cx);
-                updateJoystickBar('joyElevFill', 'joyElevVal', data.cy);
-                updateJoystickBar('joyGiroFill', 'joyGiroVal', data.cz);
+                processTelemetryData(data);
 
             } catch (error) {
-                console.error("Error al obtener telemetría:", error);
+                console.error("Error al obtener telemetría de red:", error);
                 consecFails++;
                 
-                // Si falla 3 veces seguidas, mostrar estado desconectado
                 if (consecFails >= 3) {
                     let statusDot = document.getElementById('statusDot');
                     let statusText = document.getElementById('statusText');
@@ -1007,7 +1156,6 @@
                     modeBadge.className = 'mode-badge inactivo';
                     modeBadge.innerText = 'SIN CONEXIÓN';
 
-                    // Deshabilitar controles al desconectarse
                     let controlButtons = document.querySelectorAll('.btn:not(.btn-stop)');
                     controlButtons.forEach(btn => btn.disabled = true);
                     let modeSwitch = document.getElementById('modeSwitch');
@@ -1039,16 +1187,13 @@
             }
         }
 
-        // Habilitar polling periódico de telemetría (cada 300 ms)
-        setInterval(updateTelemetry, 300);
-        // Carga inicial
+        // Inicialización
+        pollingInterval = setInterval(updateTelemetry, 300);
         updateTelemetry();
 
         // --- SISTEMA DE CAMBIO DE TEMA CLARO/OSCURO ---
         const themeToggle = document.getElementById('themeToggle');
         const themeIcon = document.getElementById('themeIcon');
-        
-        // Inicializar icono
         const activeTheme = document.documentElement.getAttribute('data-theme') || 'dark';
         themeIcon.textContent = activeTheme === 'light' ? '🌙' : '☀️';
         
@@ -1060,7 +1205,6 @@
             } else {
                 newTheme = 'dark';
             }
-            
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             themeIcon.textContent = newTheme === 'light' ? '🌙' : '☀️';
