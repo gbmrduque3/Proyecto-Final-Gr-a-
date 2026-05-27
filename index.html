@@ -47,9 +47,11 @@
             --tower-color: #465866;
             --tower-line: #1e293b;
             --contrapeso-color: #475569;
+            --card-line: rgba(255, 255, 255, 0.16);
         }
 
         [data-theme="light"] {
+            --card-line: rgba(15, 23, 42, 0.15);
             /* Light Mode */
             --bg-color: #f1f5f9;
             --card-bg: rgba(255, 255, 255, 0.85);
@@ -173,6 +175,7 @@
         }
 
         .card {
+            position: relative;
             background: var(--card-bg);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
@@ -184,6 +187,28 @@
             flex-direction: column;
             gap: 20px;
             transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+        }
+
+        .card::before,
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 24px;
+            bottom: 24px;
+            width: 1px;
+            background-image: linear-gradient(var(--card-line) 50%, transparent 0%);
+            background-size: 1px 10px;
+            opacity: 0.9;
+            pointer-events: none;
+        }
+
+        .card::before {
+            left: 16px;
+        }
+
+        .card::after {
+            right: 16px;
         }
 
         .card h2 {
@@ -604,7 +629,7 @@
             <button id="themeToggle" class="theme-toggle-btn" title="Alternar Tema Claro/Oscuro">
                 <span class="theme-icon" id="themeIcon">☀️</span>
             </button>
-            <!-- Interruptor de modo (Toggle Switch) -->
+            <!-- Interruptor de modo (Toggle Switch): alterna el control entre Web y Joystick -->
             <div style="display: flex; align-items: center; gap: 8px;">
                 <span id="switchLabel" style="font-size: 13px; font-weight: 600; color: var(--text-secondary); transition: all 0.3s;">Control Web</span>
                 <label class="switch-container" title="Alternar Modo de Control">
@@ -852,6 +877,7 @@
         }
 
         // --- SISTEMA DE TELEMETRÍA ---
+        // Esta función consulta el endpoint /telemetry y actualiza la UI en tiempo real.
         async function updateTelemetry() {
             let tStart = performance.now();
             try {
@@ -909,6 +935,7 @@
                 }
 
                 // Habilitar/Deshabilitar botones de control manual según corresponda (excluyendo Parada de Emergencia)
+                // Esta lógica evita que el usuario intente enviar comandos Web cuando el Arduino ya está en modo Joystick.
                 let controlButtons = document.querySelectorAll('.btn:not(.btn-stop)');
                 controlButtons.forEach(btn => {
                     btn.disabled = !isWebMode;

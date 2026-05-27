@@ -75,6 +75,7 @@ async def handle_client(reader, writer):
         elif "GET /left " in request: comando = 'L'
         elif "GET /right " in request: comando = 'R'
         elif "GET /stop " in request: comando = 'S'
+        # Nuevo comando para alternar el modo de control entre Web y Joystick
         elif "GET /toggle-mode " in request: comando = 'M'
        
         # Lógica de respuesta del servidor
@@ -86,6 +87,7 @@ async def handle_client(reader, writer):
            
         elif "GET /telemetry " in request:
             # Devolver los datos de telemetría en formato JSON con cabecera CORS
+            # Esta ruta es consultada periódicamente por la interfaz web para actualizar el estado
             response = f"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nConnection: close\r\n\r\n{latest_telemetry}"
            
         elif "GET / " in request:

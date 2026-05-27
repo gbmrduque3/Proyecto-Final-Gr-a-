@@ -163,7 +163,8 @@ void loop() {
       ultimoComandoWeb = millis(); // Reiniciar timeout
     } 
     else if (c == 'M') {
-      // Alternar modo de control (Comando Web)
+      // Comando 'M': alterna entre modo Web y modo Joystick en el firmware
+      // Este cambio de modo también se refleja en la telemetría enviada al ESP32.
       controlWebActivo = !controlWebActivo;
     }
   }
@@ -334,6 +335,12 @@ void loop() {
   String modoTelemetria = controlWebActivo ? "WEB" : "JOYSTICK";
 
   // 6. ENVIAR REPORTE SERIAL CADA 200MS
+  // El firmware ahora envía un JSON de telemetría ampliado que incluye:
+  // - mode: modo activo (WEB o JOYSTICK)
+  // - cx, cy, cz: valores crudos de los joysticks de Carro, Elevación y Giro
+  // - sw: estado del pulsador físico (0 = pulsado, 1 = liberado)
+  // - pCarro, pElev, pGiro: posiciones estimadas para animar la interfaz web
+  // - mCarro, mElev, mGiro: estados de movimiento simplificados para la UI
   if (ahora - ultimoReporteTelemetria >= INTERVALO_TELEMETRIA) {
     ultimoReporteTelemetria = ahora;
 

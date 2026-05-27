@@ -87,6 +87,17 @@
         [data-theme="dark"] .badge-joy { color: #fb923c; }
         [data-theme="dark"] .badge-motor { color: #22d3ee; }
 
+        [data-theme="dark"] .modal-specs-table tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.06);
+        }
+        [data-theme="dark"] .modal-specs-table td:first-child {
+            background-color: rgba(255, 255, 255, 0.04);
+        }
+        [data-theme="dark"] .modal-specs-table .pin-tag {
+            background: rgba(255, 255, 255, 0.08) !important;
+            color: var(--text-primary);
+        }
+
         * {
             box-sizing: border-box;
             scrollbar-width: thin;
@@ -351,7 +362,7 @@
 
         .info-desc {
             font-size: 12px;
-            color: var(--text-secondary);
+            color: var(--text-primary);
             line-height: 1.5;
         }
 
@@ -567,10 +578,12 @@
             display: flex;
             flex-direction: column;
             gap: 14px;
+            color: var(--text-primary);
         }
 
         .modal-badge {
             align-self: flex-start;
+            color: var(--text-secondary);
         }
 
         .modal-desc {
@@ -590,7 +603,7 @@
         }
 
         .modal-specs-table tr:nth-child(even) {
-            background-color: #f8fafc;
+            background-color: rgba(255, 255, 255, 0.08);
         }
 
         .modal-specs-table td {
@@ -598,12 +611,14 @@
             font-size: 12px;
             border-bottom: 1px solid var(--border-color);
             color: var(--text-primary);
+            background: transparent;
         }
 
         .modal-specs-table td:first-child {
             font-weight: 700;
             color: var(--text-secondary);
             width: 40%;
+            background-color: rgba(255, 255, 255, 0.05);
         }
 
         .modal-action-btn {
@@ -624,6 +639,17 @@
         .modal-action-btn:hover {
             background-color: #e2e8f0;
             border-color: #cbd5e1;
+        }
+
+        [data-theme="dark"] .modal-action-btn {
+            color: #0f172a;
+            background-color: #f8fafc;
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        [data-theme="dark"] .modal-action-btn:hover {
+            background-color: #e2e8f0;
+            border-color: rgba(255, 255, 255, 0.24);
         }
     </style>
 </head>
@@ -681,7 +707,7 @@
                         <rect x="50" y="140" width="170" height="140" class="component-box esp-box" />
                         <!-- Detalle antena Wi-Fi -->
                         <path d="M 60 145 L 60 160 M 65 145 L 65 155 M 70 145 L 70 160 M 75 145 L 75 155 M 80 145 L 80 160" stroke="#d97706" stroke-width="1.5" fill="none" />
-                        <rect x="90" y="145" width="22" height="15" fill="#e4e4e7" rx="2" stroke="rgba(0,0,0,0.1)" />
+                        <rect x="90" y="145" width="22" height="15" fill="transparent" rx="2" stroke="rgba(0,0,0,0.1)" />
                         <!-- Título -->
                         <text x="135" y="162" class="comp-title" text-anchor="middle">ESP32 GATEWAY</text>
                         <text x="135" y="173" class="comp-subtitle" text-anchor="middle">Servidor Web WiFi</text>
