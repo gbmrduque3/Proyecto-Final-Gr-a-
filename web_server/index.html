@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <!--
     TorreGrúa Telemetría y Control Remoto.
@@ -11,7 +12,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Telemetría y Control - Grúa Torre</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Inter:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
     <script>
         // Cargar tema guardado antes de renderizar
         const currentTheme = localStorage.getItem('theme') || 'dark';
@@ -23,19 +26,19 @@
             --bg-color: #0b0f19;
             --card-bg: rgba(22, 30, 49, 0.75);
             --border-color: rgba(255, 255, 255, 0.08);
-            
+
             --carro-color: #00bcd4;
-            --carro-glow: rgba(0, 188, 212, 0.4);
-            
+            --carro-glow: rgba(0, 212, 88, 0.4);
+
             --elev-color: #ff9800;
             --elev-glow: rgba(255, 152, 0, 0.4);
-            
+
             --giro-color: #9c27b0;
             --giro-glow: rgba(156, 39, 176, 0.4);
-            
+
             --stop-color: #f44336;
             --stop-glow: rgba(244, 67, 54, 0.4);
-            
+
             --success-color: #4caf50;
             --text-primary: #ffffff;
             --text-secondary: #8f9cae;
@@ -53,22 +56,22 @@
         [data-theme="light"] {
             --card-line: rgba(15, 23, 42, 0.15);
             /* Light Mode */
-            --bg-color: #f1f5f9;
-            --card-bg: rgba(255, 255, 255, 0.85);
-            --border-color: rgba(15, 23, 42, 0.08);
-            
+            --bg-color: #e2f9bd;
+            --card-bg: rgba(216, 206, 206, 0.85);
+            --border-color: rgba(21, 55, 229, 0.342);
+
             --carro-color: #0891b2;
             --carro-glow: rgba(8, 145, 178, 0.25);
-            
+
             --elev-color: #ea580c;
             --elev-glow: rgba(234, 88, 12, 0.25);
-            
+
             --giro-color: #7c3aed;
             --giro-glow: rgba(124, 58, 237, 0.25);
-            
+
             --text-primary: #0f172a;
             --text-secondary: #475569;
-            
+
             --btn-theme-bg: rgba(15, 23, 42, 0.04);
             --input-bg: rgba(255, 255, 255, 0.7);
             --card-shadow: 0 8px 24px rgba(148, 163, 184, 0.12);
@@ -76,7 +79,7 @@
             --tower-color: #64748b;
             --tower-line: #cbd5e1;
             --contrapeso-color: #94a3b8;
-            
+
             --bg-radial-1: rgba(124, 58, 237, 0.04);
             --bg-radial-2: rgba(8, 145, 178, 0.04);
         }
@@ -94,7 +97,7 @@
             box-sizing: border-box;
             user-select: none;
             -webkit-user-select: none;
-            background-image: 
+            background-image:
                 radial-gradient(at 10% 20%, var(--bg-radial-1, rgba(156, 39, 176, 0.12)) 0px, transparent 50%),
                 radial-gradient(at 90% 80%, var(--bg-radial-2, rgba(0, 188, 212, 0.12)) 0px, transparent 50%);
             background-attachment: fixed;
@@ -155,9 +158,17 @@
         }
 
         @keyframes pulse-green {
-            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
-            70% { box-shadow: 0 0 0 8px rgba(76, 175, 80, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+            0% {
+                box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 8px rgba(76, 175, 80, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+            }
         }
 
         .main-container {
@@ -270,9 +281,11 @@
             background: linear-gradient(135deg, #00acc1, #00838f);
             border: 1px solid rgba(0, 188, 212, 0.2);
         }
+
         .btn-carro:hover {
             box-shadow: 0 0 15px var(--carro-glow);
         }
+
         .btn-carro:active {
             transform: scale(0.96);
             box-shadow: 0 0 8px var(--carro-glow);
@@ -282,9 +295,11 @@
             background: linear-gradient(135deg, #fb8c00, #ef6c00);
             border: 1px solid rgba(255, 152, 0, 0.2);
         }
+
         .btn-elev:hover {
             box-shadow: 0 0 15px var(--elev-glow);
         }
+
         .btn-elev:active {
             transform: scale(0.96);
             box-shadow: 0 0 8px var(--elev-glow);
@@ -294,9 +309,11 @@
             background: linear-gradient(135deg, #8e24aa, #6a1b9a);
             border: 1px solid rgba(156, 39, 176, 0.2);
         }
+
         .btn-giro:hover {
             box-shadow: 0 0 15px var(--giro-glow);
         }
+
         .btn-giro:active {
             transform: scale(0.96);
             box-shadow: 0 0 8px var(--giro-glow);
@@ -310,9 +327,11 @@
             font-size: 16px;
             letter-spacing: 0.5px;
         }
+
         .btn-stop:hover {
             box-shadow: 0 0 20px var(--stop-glow);
         }
+
         .btn-stop:active {
             transform: scale(0.97);
             box-shadow: 0 0 10px var(--stop-glow);
@@ -413,12 +432,12 @@
             border-radius: 50%;
         }
 
-        input:checked + .slider {
+        input:checked+.slider {
             background-color: rgba(0, 188, 212, 0.2);
             border-color: var(--carro-color);
         }
 
-        input:checked + .slider:before {
+        input:checked+.slider:before {
             transform: translateX(22px);
             background-color: var(--carro-color);
             box-shadow: 0 0 8px var(--carro-glow);
@@ -463,6 +482,7 @@
         .svg-glow {
             filter: drop-shadow(0 0 4px rgba(0, 188, 212, 0.5));
         }
+
         .svg-glow-elev {
             filter: drop-shadow(0 0 4px rgba(255, 152, 0, 0.5));
         }
@@ -531,8 +551,15 @@
             transition: width 0.2s ease-out;
         }
 
-        .pb-carro { background: var(--carro-color); box-shadow: 0 0 8px var(--carro-glow); }
-        .pb-elev { background: var(--elev-color); box-shadow: 0 0 8px var(--elev-glow); }
+        .pb-carro {
+            background: var(--carro-color);
+            box-shadow: 0 0 8px var(--carro-glow);
+        }
+
+        .pb-elev {
+            background: var(--elev-color);
+            box-shadow: 0 0 8px var(--elev-glow);
+        }
 
         /* Depurador Joysticks */
         .joystick-debugger {
@@ -613,22 +640,27 @@
             padding: 0;
             outline: none;
         }
+
         .theme-toggle-btn:hover {
             background: var(--btn-theme-bg);
             border-color: var(--carro-color);
             transform: scale(1.05);
         }
+
         .theme-toggle-btn:active {
             transform: scale(0.95);
         }
     </style>
 </head>
+
 <body>
-        <header>
+    <header>
         <h1>🏗️ TorreGrúa Control</h1>
         <div style="display: flex; align-items: center; gap: 15px;">
             <!-- Botón de Conectar USB -->
-            <button id="serialConnectBtn" class="theme-toggle-btn" style="width: auto; padding: 0 15px; border-radius: 20px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px;" title="Conectar a Grúa vía USB">
+            <button id="serialConnectBtn" class="theme-toggle-btn"
+                style="width: auto; padding: 0 15px; border-radius: 20px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px;"
+                title="Conectar a Grúa vía USB">
                 🔌 Conectar USB
             </button>
             <!-- Botón de Tema -->
@@ -636,20 +668,28 @@
                 <span class="theme-icon" id="themeIcon">☀️</span>
             </button>
             <!-- Botón de Ir a Esquema -->
-            <a href="schema.html" class="theme-toggle-btn" style="width: auto; padding: 0 15px; border-radius: 20px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; text-decoration: none; color: inherit;" title="Ver Esquema Electrónico">
+            <a href="schema.html" class="theme-toggle-btn"
+                style="width: auto; padding: 0 15px; border-radius: 20px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; text-decoration: none; color: inherit;"
+                title="Ver Esquema Electrónico">
                 📋 Ver Esquema
             </a>
             <!-- Botón de Ir a Guía de Estudio -->
-            <a href="estudio.html" class="theme-toggle-btn" style="width: auto; padding: 0 15px; border-radius: 20px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; text-decoration: none; color: inherit;" title="Ver Guía de Estudio para Exposición">
+            <a href="estudio.html" class="theme-toggle-btn"
+                style="width: auto; padding: 0 15px; border-radius: 20px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; text-decoration: none; color: inherit;"
+                title="Ver Guía de Estudio para Exposición">
                 📚 Guía de Estudio
             </a>
             <!-- Botón de Ir a Presentación -->
-            <a href="presentacion.html" class="theme-toggle-btn" style="width: auto; padding: 0 15px; border-radius: 20px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; text-decoration: none; color: inherit;" title="Ver Presentación de Exposición">
+            <a href="presentacion.html" class="theme-toggle-btn"
+                style="width: auto; padding: 0 15px; border-radius: 20px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; text-decoration: none; color: inherit;"
+                title="Ver Presentación de Exposición">
                 📢 Presentación
             </a>
             <!-- Interruptor de modo (Toggle Switch): alterna el control entre Web y Joystick -->
             <div style="display: flex; align-items: center; gap: 8px;">
-                <span id="switchLabel" style="font-size: 13px; font-weight: 600; color: var(--text-secondary); transition: all 0.3s;">Control Web</span>
+                <span id="switchLabel"
+                    style="font-size: 13px; font-weight: 600; color: var(--text-secondary); transition: all 0.3s;">Control
+                    Web</span>
                 <label class="switch-container" title="Alternar Modo de Control">
                     <input type="checkbox" id="modeSwitch" onchange="enviarComando('/toggle-mode')">
                     <span class="slider"></span>
@@ -667,16 +707,18 @@
         <!-- COLUMNA 1: CONTROLES REMOTOS -->
         <div class="card">
             <h2>Mando a Distancia</h2>
-            
+
             <div class="control-group">
                 <h3>Carro (Trolley)</h3>
                 <div class="control-row">
-                    <button class="btn btn-carro" onpointerdown="iniciar('/forward')" onpointerup="detener()" onpointerleave="detener()">
+                    <button class="btn btn-carro" onpointerdown="iniciar('/forward')" onpointerup="detener()"
+                        onpointerleave="detener()">
                         <span>⬆️</span>
                         <span>Adelante</span>
                         <span class="btn-label">Trolley In</span>
                     </button>
-                    <button class="btn btn-carro" onpointerdown="iniciar('/backward')" onpointerup="detener()" onpointerleave="detener()">
+                    <button class="btn btn-carro" onpointerdown="iniciar('/backward')" onpointerup="detener()"
+                        onpointerleave="detener()">
                         <span>⬇️</span>
                         <span>Atrás</span>
                         <span class="btn-label">Trolley Out</span>
@@ -687,12 +729,14 @@
             <div class="control-group">
                 <h3>Gancho (Hoist)</h3>
                 <div class="control-row">
-                    <button class="btn btn-elev" onpointerdown="iniciar('/up')" onpointerup="detener()" onpointerleave="detener()">
+                    <button class="btn btn-elev" onpointerdown="iniciar('/up')" onpointerup="detener()"
+                        onpointerleave="detener()">
                         <span>⚓</span>
                         <span>Bajar</span>
                         <span class="btn-label">Cable Down</span>
                     </button>
-                    <button class="btn btn-elev" onpointerdown="iniciar('/down')" onpointerup="detener()" onpointerleave="detener()">
+                    <button class="btn btn-elev" onpointerdown="iniciar('/down')" onpointerup="detener()"
+                        onpointerleave="detener()">
                         <span>🏗️</span>
                         <span>Subir</span>
                         <span class="btn-label">Cable Up</span>
@@ -703,12 +747,14 @@
             <div class="control-group">
                 <h3>Giro de Cabina (Slew)</h3>
                 <div class="control-row">
-                    <button class="btn btn-giro" onpointerdown="iniciar('/left')" onpointerup="detener()" onpointerleave="detener()">
+                    <button class="btn btn-giro" onpointerdown="iniciar('/left')" onpointerup="detener()"
+                        onpointerleave="detener()">
                         <span>⬅️</span>
                         <span>Izquierda</span>
                         <span class="btn-label">Slew CCW</span>
                     </button>
-                    <button class="btn btn-giro" onpointerdown="iniciar('/right')" onpointerup="detener()" onpointerleave="detener()">
+                    <button class="btn btn-giro" onpointerdown="iniciar('/right')" onpointerup="detener()"
+                        onpointerleave="detener()">
                         <span>Derecha ➡️</span>
                         <span class="btn-label">Slew CW</span>
                     </button>
@@ -716,7 +762,9 @@
             </div>
 
             <div style="margin-top: 10px;">
-                <button class="btn btn-stop" onclick="enviarComando('/stop')" style="background: linear-gradient(135deg, #ff9800, #f44336); box-shadow: 0 0 20px rgba(244, 67, 54, 0.5); font-size: 16px; font-weight: 800;">🛑 DETENER MOVIMIENTO (STOP)</button>
+                <button class="btn btn-stop" onclick="enviarComando('/stop')"
+                    style="background: linear-gradient(135deg, #ff9800, #f44336); box-shadow: 0 0 20px rgba(244, 67, 54, 0.5); font-size: 16px; font-weight: 800;">🛑
+                    DETENER MOVIMIENTO (STOP)</button>
             </div>
         </div>
 
@@ -732,37 +780,44 @@
                 <!-- Vista Lateral -->
                 <div class="viz-box">
                     <div class="viz-box-title">Vista Lateral (Carro y Gancho)</div>
-                    <svg width="100%" height="160" viewBox="0 0 240 160" style="background: var(--input-bg); border-radius: 10px; transition: background 0.3s;">
+                    <svg width="100%" height="160" viewBox="0 0 240 160"
+                        style="background: var(--input-bg); border-radius: 10px; transition: background 0.3s;">
                         <!-- Torre (Estructura de la grúa) -->
-                        <line x1="60" y1="150" x2="60" y2="30" stroke="var(--tower-color)" stroke-width="6" stroke-linecap="round"/>
-                        <line x1="45" y1="150" x2="75" y2="150" stroke="var(--tower-color)" stroke-width="4" stroke-linecap="round"/>
-                        
+                        <line x1="60" y1="150" x2="60" y2="30" stroke="var(--tower-color)" stroke-width="6"
+                            stroke-linecap="round" />
+                        <line x1="45" y1="150" x2="75" y2="150" stroke="var(--tower-color)" stroke-width="4"
+                            stroke-linecap="round" />
+
                         <!-- Tirantes estructurales interiores en diagonal -->
-                        <line x1="60" y1="120" x2="70" y2="90" stroke="var(--tower-line)" stroke-width="1.5"/>
-                        <line x1="60" y1="90" x2="50" y2="60" stroke="var(--tower-line)" stroke-width="1.5"/>
-                        <line x1="60" y1="60" x2="70" y2="30" stroke="var(--tower-line)" stroke-width="1.5"/>
-                        
+                        <line x1="60" y1="120" x2="70" y2="90" stroke="var(--tower-line)" stroke-width="1.5" />
+                        <line x1="60" y1="90" x2="50" y2="60" stroke="var(--tower-line)" stroke-width="1.5" />
+                        <line x1="60" y1="60" x2="70" y2="30" stroke="var(--tower-line)" stroke-width="1.5" />
+
                         <!-- Pluma (Brazo horizontal) -->
                         <!-- Contra-pluma (hacia la izquierda, con contrapeso) -->
-                        <line x1="20" y1="30" x2="60" y2="30" stroke="var(--contrapeso-color)" stroke-width="4"/>
-                        <rect x="25" y="24" width="12" height="12" fill="var(--contrapeso-color)" rx="2" title="Contrapeso"/>
-                        
+                        <line x1="20" y1="30" x2="60" y2="30" stroke="var(--contrapeso-color)" stroke-width="4" />
+                        <rect x="25" y="24" width="12" height="12" fill="var(--contrapeso-color)" rx="2"
+                            title="Contrapeso" />
+
                         <!-- Pluma principal (hacia la derecha) -->
-                        <line x1="60" y1="30" x2="220" y2="30" stroke="var(--carro-color)" stroke-width="4" stroke-linecap="round" class="svg-glow"/>
-                        <line x1="60" y1="15" x2="60" y2="30" stroke="var(--contrapeso-color)" stroke-width="2"/>
-                        <line x1="20" y1="30" x2="60" y2="15" stroke="var(--contrapeso-color)" stroke-width="1.5"/>
-                        <line x1="100" y1="30" x2="60" y2="15" stroke="var(--contrapeso-color)" stroke-width="1.5"/>
-                        
+                        <line x1="60" y1="30" x2="220" y2="30" stroke="var(--carro-color)" stroke-width="4"
+                            stroke-linecap="round" class="svg-glow" />
+                        <line x1="60" y1="15" x2="60" y2="30" stroke="var(--contrapeso-color)" stroke-width="2" />
+                        <line x1="20" y1="30" x2="60" y2="15" stroke="var(--contrapeso-color)" stroke-width="1.5" />
+                        <line x1="100" y1="30" x2="60" y2="15" stroke="var(--contrapeso-color)" stroke-width="1.5" />
+
                         <!-- Cable de elevación vertical -->
-                        <line id="svgCable" x1="100" y1="32" x2="100" y2="80" stroke="var(--text-primary)" stroke-width="2" stroke-dasharray="2,2"/>
-                        
+                        <line id="svgCable" x1="100" y1="32" x2="100" y2="80" stroke="var(--text-primary)"
+                            stroke-width="2" stroke-dasharray="2,2" />
+
                         <!-- Carro móvil -->
-                        <rect id="svgCarro" x="90" y="28" width="20" height="8" fill="#e74c3c" rx="2"/>
-                        
+                        <rect id="svgCarro" x="90" y="28" width="20" height="8" fill="#e74c3c" rx="2" />
+
                         <!-- Gancho de elevación -->
                         <g id="svgGancho" transform="translate(100, 80)">
-                            <circle cx="0" cy="0" r="4" fill="var(--elev-color)" class="svg-glow-elev"/>
-                            <path d="M -3 0 L -3 6 C -3 9, 3 9, 3 6 C 3 4, 1 4, 1 5 C 1 7, -1 7, -1 6 L -1 0 Z" fill="var(--elev-color)" class="svg-glow-elev"/>
+                            <circle cx="0" cy="0" r="4" fill="var(--elev-color)" class="svg-glow-elev" />
+                            <path d="M -3 0 L -3 6 C -3 9, 3 9, 3 6 C 3 4, 1 4, 1 5 C 1 7, -1 7, -1 6 L -1 0 Z"
+                                fill="var(--elev-color)" class="svg-glow-elev" />
                         </g>
 
                         <!-- Regla de distancia en la pluma -->
@@ -774,30 +829,35 @@
                 <!-- Vista Superior (Rotación) -->
                 <div class="viz-box">
                     <div class="viz-box-title">Giro (Orientación)</div>
-                    <svg width="150" height="150" viewBox="0 0 120 120" style="background: var(--input-bg); border-radius: 50%; transition: background 0.3s;">
+                    <svg width="150" height="150" viewBox="0 0 120 120"
+                        style="background: var(--input-bg); border-radius: 50%; transition: background 0.3s;">
                         <!-- Brújula circular exterior -->
-                        <circle cx="60" cy="60" r="50" fill="none" stroke="var(--tower-line)" stroke-width="2" stroke-dasharray="4,4"/>
+                        <circle cx="60" cy="60" r="50" fill="none" stroke="var(--tower-line)" stroke-width="2"
+                            stroke-dasharray="4,4" />
                         <text x="56" y="20" font-size="10" font-weight="bold" fill="var(--text-secondary)">N</text>
                         <text x="57" y="110" font-size="10" font-weight="bold" fill="var(--text-primary)">S</text>
                         <text x="100" y="64" font-size="10" font-weight="bold" fill="var(--text-primary)">E</text>
                         <text x="12" y="64" font-size="10" font-weight="bold" fill="var(--text-primary)">O</text>
-                        
+
                         <!-- Pluma rotatoria -->
                         <g id="svgSlewGroup" transform="rotate(0, 60, 60)">
                             <!-- Contra-pluma corta -->
-                            <line x1="60" y1="60" x2="60" y2="85" stroke="var(--contrapeso-color)" stroke-width="3" stroke-linecap="round"/>
-                            <circle cx="60" cy="85" r="4" fill="var(--contrapeso-color)"/>
-                            
+                            <line x1="60" y1="60" x2="60" y2="85" stroke="var(--contrapeso-color)" stroke-width="3"
+                                stroke-linecap="round" />
+                            <circle cx="60" cy="85" r="4" fill="var(--contrapeso-color)" />
+
                             <!-- Pluma principal larga (glowing purple) -->
-                            <line x1="60" y1="60" x2="60" y2="20" stroke="var(--giro-color)" stroke-width="4" stroke-linecap="round" style="filter: drop-shadow(0 0 4px var(--giro-glow));"/>
-                            <polygon points="60,15 57,22 63,22" fill="var(--giro-color)"/>
-                            
+                            <line x1="60" y1="60" x2="60" y2="20" stroke="var(--giro-color)" stroke-width="4"
+                                stroke-linecap="round" style="filter: drop-shadow(0 0 4px var(--giro-glow));" />
+                            <polygon points="60,15 57,22 63,22" fill="var(--giro-color)" />
+
                             <!-- Indicador de carro en vista superior -->
-                            <circle id="svgCarroSuperior" cx="60" cy="45" r="4" fill="#e74c3c"/>
+                            <circle id="svgCarroSuperior" cx="60" cy="45" r="4" fill="#e74c3c" />
                         </g>
-                        
+
                         <!-- Eje central de la torre -->
-                        <circle cx="60" cy="60" r="7" fill="var(--card-bg)" stroke="var(--tower-line)" stroke-width="2"/>
+                        <circle cx="60" cy="60" r="7" fill="var(--card-bg)" stroke="var(--tower-line)"
+                            stroke-width="2" />
                     </svg>
                 </div>
             </div>
@@ -806,7 +866,8 @@
             <div class="indicators-grid">
                 <div class="ind-card">
                     <span class="ind-label">Carro (Distancia)</span>
-                    <span class="ind-val" id="valCarroCm">0.0 <span style="font-size: 11px; color: var(--text-secondary); font-weight: normal;">cm</span></span>
+                    <span class="ind-val" id="valCarroCm">0.0 <span
+                            style="font-size: 11px; color: var(--text-secondary); font-weight: normal;">cm</span></span>
                     <span class="ind-state" id="stateCarro" style="color: var(--carro-color);">DETENIDO</span>
                     <div class="progress-container">
                         <div class="progress-bar pb-carro" id="barCarro"></div>
@@ -815,7 +876,8 @@
 
                 <div class="ind-card">
                     <span class="ind-label">Elevación (Gancho)</span>
-                    <span class="ind-val" id="valElevCm">0.0 <span style="font-size: 11px; color: var(--text-secondary); font-weight: normal;">cm</span></span>
+                    <span class="ind-val" id="valElevCm">0.0 <span
+                            style="font-size: 11px; color: var(--text-secondary); font-weight: normal;">cm</span></span>
                     <span class="ind-state" id="stateElev" style="color: var(--elev-color);">DETENIDO</span>
                     <div class="progress-container">
                         <div class="progress-bar pb-elev" id="barElev"></div>
@@ -824,7 +886,8 @@
 
                 <div class="ind-card">
                     <span class="ind-label">Ángulo de Giro</span>
-                    <span class="ind-val" id="valGiroDeg">0.0<span style="font-size: 11px; color: var(--text-secondary); font-weight: normal;">°</span></span>
+                    <span class="ind-val" id="valGiroDeg">0.0<span
+                            style="font-size: 11px; color: var(--text-secondary); font-weight: normal;">°</span></span>
                     <span class="ind-state" id="stateGiro" style="color: var(--giro-color);">DETENIDO</span>
                 </div>
             </div>
@@ -832,7 +895,7 @@
             <!-- Depurador de Mandos Físicos (Joysticks) -->
             <div class="joystick-debugger">
                 <div class="viz-box-title" style="margin-bottom: 4px;">Monitor de Entrada Analógica (Joysticks)</div>
-                
+
                 <div class="joy-bar-row">
                     <span class="joy-name">Joy X (Carro)</span>
                     <div class="joy-track">
@@ -936,7 +999,7 @@
             try {
                 port = await navigator.serial.requestPort();
                 await port.open({ baudRate: 9600 });
-                
+
                 // Detener polling de red HTTP
                 if (pollingInterval) {
                     clearInterval(pollingInterval);
@@ -966,12 +1029,12 @@
             if (reader) {
                 try {
                     await reader.cancel();
-                } catch (e) {}
+                } catch (e) { }
             }
             if (port) {
                 try {
                     await port.close();
-                } catch (e) {}
+                } catch (e) { }
             }
             port = null;
             reader = null;
@@ -1028,7 +1091,7 @@
                                     try {
                                         const data = JSON.parse(line);
                                         processTelemetryData(data);
-                                    } catch (e) {}
+                                    } catch (e) { }
                                 }
                             }
                         }
@@ -1043,15 +1106,15 @@
         // --- PROCESAMIENTO Y ACTUALIZACIÓN DE UI DE TELEMETRÍA ---
         function processTelemetryData(data) {
             consecFails = 0;
-            
+
             // Actualizar Badge de Modo Activo y Switch Toggle
             let modeBadge = document.getElementById('modeBadge');
             let modeSwitch = document.getElementById('modeSwitch');
             let switchLabel = document.getElementById('switchLabel');
             modeBadge.className = 'mode-badge';
-            
+
             let isWebMode = (data.mode === 'WEB');
-            
+
             if (isWebMode) {
                 modeBadge.innerText = 'Modo Web';
                 modeBadge.classList.add('web');
@@ -1102,15 +1165,15 @@
             // --- ACTUALIZAR REPRESENTACIÓN DINÁMICA SVG LATERAL ---
             let carriageX = 65 + (pctCarro / 100) * 145;
             document.getElementById('svgCarro').setAttribute('x', carriageX - 10);
-            
+
             let cableLen = 10 + (pctElev / 100) * 90;
             let newY2 = 32 + cableLen;
-            
+
             let svgCable = document.getElementById('svgCable');
             svgCable.setAttribute('x1', carriageX);
             svgCable.setAttribute('x2', carriageX);
             svgCable.setAttribute('y2', newY2);
-            
+
             document.getElementById('svgGancho').setAttribute('transform', `translate(${carriageX}, ${newY2})`);
 
             // --- ACTUALIZAR VISTA DE GIRO SUPERIOR SVG ---
@@ -1130,17 +1193,17 @@
             try {
                 let response = await fetch('/telemetry');
                 if (!response.ok) throw new Error("HTTP error " + response.status);
-                
+
                 let data = await response.json();
                 let tEnd = performance.now();
                 let ping = Math.round(tEnd - tStart);
-                
+
                 consecFails = 0;
-                
+
                 let statusDot = document.getElementById('statusDot');
                 let statusText = document.getElementById('statusText');
                 let pingText = document.getElementById('pingText');
-                
+
                 statusDot.className = 'status-dot connected';
                 statusText.innerText = 'Red Conectada';
                 pingText.innerText = `(${ping} ms)`;
@@ -1150,16 +1213,16 @@
             } catch (error) {
                 console.error("Error al obtener telemetría de red:", error);
                 consecFails++;
-                
+
                 if (consecFails >= 3) {
                     let statusDot = document.getElementById('statusDot');
                     let statusText = document.getElementById('statusText');
                     let pingText = document.getElementById('pingText');
-                    
+
                     statusDot.className = 'status-dot';
                     statusText.innerText = 'Desconectado';
                     pingText.innerText = '';
-                    
+
                     let modeBadge = document.getElementById('modeBadge');
                     modeBadge.className = 'mode-badge inactivo';
                     modeBadge.innerText = 'SIN CONEXIÓN';
@@ -1181,10 +1244,10 @@
         function updateJoystickBar(fillId, valId, rawVal) {
             let val = parseInt(rawVal);
             if (isNaN(val)) val = 512;
-            
+
             document.getElementById(valId).innerText = val;
             let fill = document.getElementById(fillId);
-            
+
             let offset = ((val - 512) / 512) * 50; // Rango [-50%, 50%]
             if (offset >= 0) {
                 fill.style.left = '50%';
@@ -1204,7 +1267,7 @@
         const themeIcon = document.getElementById('themeIcon');
         const activeTheme = document.documentElement.getAttribute('data-theme') || 'dark';
         themeIcon.textContent = activeTheme === 'light' ? '🌙' : '☀️';
-        
+
         themeToggle.addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             let newTheme = 'dark';
@@ -1219,4 +1282,5 @@
         });
     </script>
 </body>
+
 </html>
